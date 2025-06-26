@@ -10,13 +10,8 @@ const vision = require('@google-cloud/vision');
 
 const app = express();
 
-// ✅ Initialize Google Vision client with secure credentials
-const client = new vision.ImageAnnotatorClient({
-  credentials: {
-    client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-  }
-});
+// ✅ Initialize Google Vision client using default GOOGLE_APPLICATION_CREDENTIALS
+const client = new vision.ImageAnnotatorClient();
 
 // Connect to MongoDB
 connectDB();
