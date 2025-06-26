@@ -14,7 +14,7 @@ connectDB();
 
 // Middleware
 const allowedOrigins = [
-  'https://ns-client-sage.vercel.app',  // Your Vercel frontend
+  'https://ns-client-henna.vercel.app',  // Your Vercel frontend
   'http://localhost:3000'               // For local testing
 ];
 
