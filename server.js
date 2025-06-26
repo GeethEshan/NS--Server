@@ -1,5 +1,5 @@
 require('dotenv').config();
-const express = require('express'); 
+const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const analysisRoutes = require('./routes/analysisRoutes');
@@ -10,11 +10,10 @@ const vision = require('@google-cloud/vision');
 
 const app = express();
 
-// Initialize Google Vision client with credentials from env
+// ✅ Initialize Google Vision client with secure credentials
 const client = new vision.ImageAnnotatorClient({
   credentials: {
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    // Replace literal "\n" with actual newlines in private key
     private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
   }
 });
@@ -22,10 +21,10 @@ const client = new vision.ImageAnnotatorClient({
 // Connect to MongoDB
 connectDB();
 
-// Middleware
+// ✅ CORS Setup
 const allowedOrigins = [
-  'https://ns-client-henna.vercel.app',  // Your Vercel frontend
-  'http://localhost:3000'               // For local testing
+  'https://ns-client-henna.vercel.app',  // Vercel frontend
+  'http://localhost:3000'                // Local testing
 ];
 
 app.use(cors({
@@ -42,7 +41,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// Create uploads directory if it doesn't exist
+// ✅ Ensure uploads directory exists
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -51,8 +50,7 @@ if (!fs.existsSync(uploadDir)) {
 // Serve static files from uploads directory
 app.use('/uploads', express.static(uploadDir));
 
-// Routes
-// Pass the client to your routes if needed
+// ✅ Attach Vision client to request object for analysis routes
 app.use('/api/analysis', (req, res, next) => {
   req.visionClient = client;
   next();
@@ -60,13 +58,13 @@ app.use('/api/analysis', (req, res, next) => {
 
 app.use('/api/bmi', bmiRoutes);
 
-// Simple health check route
+// Health check
 app.get('/', (req, res) => {
   res.send('✅ NutriScan API is running...');
 });
 
+// Start server
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📂 Uploads directory: ${uploadDir}`);
