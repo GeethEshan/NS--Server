@@ -13,7 +13,23 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  'https://ns-client-sage.vercel.app',  // Your Vercel frontend
+  'http://localhost:3000'               // For local testing
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Create uploads directory if it doesn't exist
@@ -29,14 +45,14 @@ app.use('/uploads', express.static(uploadDir));
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/bmi', bmiRoutes);
 
-// Simple route for testing
+// Simple health check route
 app.get('/', (req, res) => {
-  res.send('NutriScan API is running...');
+  res.send('✅ NutriScan API is running...');
 });
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Uploads directory: ${uploadDir}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📂 Uploads directory: ${uploadDir}`);
 });
