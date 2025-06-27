@@ -21,9 +21,34 @@ if (process.env.GOOGLE_CREDENTIALS_JSON) {
   console.error('❌ GOOGLE_CREDENTIALS_JSON is missing. Vision API will fail.');
 }
 
-// ✅ Initialize Google Vision client with key file
+// ✅ Initialize Google Vision client with key file and increased timeout config
 const client = new vision.ImageAnnotatorClient({
-  keyFilename: credentialsPath
+  keyFilename: credentialsPath,
+  // Optional: advanced client config for timeout (depends on version, may vary)
+  clientConfig: {
+    interfaces: {
+      'google.cloud.vision.v1.ImageAnnotator': {
+        retry_codes: [],
+        retry_params: {
+          default: {
+            initial_retry_delay_millis: 100,
+            retry_delay_multiplier: 1.2,
+            max_retry_delay_millis: 1000,
+            initial_rpc_timeout_millis: 60000,  // 60 seconds
+            rpc_timeout_multiplier: 1.0,
+            max_rpc_timeout_millis: 60000,
+            total_timeout_millis: 60000,
+          },
+        },
+        methods: {
+          BatchAnnotateImages: {
+            retry_codes_name: 'none',
+            retry_params_name: 'default',
+          },
+        },
+      },
+    },
+  },
 });
 
 connectDB();
@@ -66,7 +91,10 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📂 Uploads directory: ${uploadDir}`);
 });
+
+// ✅ Increase Express server timeout to 2 minutes
+server.setTimeout(120000);  // 120000 ms = 2 minutes
