@@ -1,5 +1,8 @@
 require('dotenv').config();
-const express = require('express');
+
+console.log("Google credentials path:", process.env.GOOGLE_APPLICATION_CREDENTIALS);
+
+const express = require('express'); 
 const cors = require('cors');
 const connectDB = require('./config/db');
 const analysisRoutes = require('./routes/analysisRoutes');
