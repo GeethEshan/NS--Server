@@ -1,8 +1,5 @@
 require('dotenv').config();
-
-console.log("Google credentials path:", process.env.GOOGLE_APPLICATION_CREDENTIALS);
-
-const express = require('express'); 
+const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const analysisRoutes = require('./routes/analysisRoutes');
@@ -13,16 +10,27 @@ const vision = require('@google-cloud/vision');
 
 const app = express();
 
-// ✅ Initialize Google Vision client using default GOOGLE_APPLICATION_CREDENTIALS
-const client = new vision.ImageAnnotatorClient();
+const credentialsPath = path.join(__dirname, 'config', 'google-credentials.json');
 
-// Connect to MongoDB
+// ✅ Reconstruct credentials file from environment variable
+if (process.env.GOOGLE_CREDENTIALS_JSON) {
+  fs.mkdirSync(path.dirname(credentialsPath), { recursive: true });
+  fs.writeFileSync(credentialsPath, process.env.GOOGLE_CREDENTIALS_JSON);
+  console.log('✅ Google credentials file written at:', credentialsPath);
+} else {
+  console.error('❌ GOOGLE_CREDENTIALS_JSON is missing. Vision API will fail.');
+}
+
+// ✅ Initialize Google Vision client with key file
+const client = new vision.ImageAnnotatorClient({
+  keyFilename: credentialsPath
+});
+
 connectDB();
 
-// ✅ CORS Setup
 const allowedOrigins = [
-  'https://ns-client-henna.vercel.app',  // Vercel frontend
-  'http://localhost:3000'                // Local testing
+  'https://ns-client-henna.vercel.app',
+  'http://localhost:3000'
 ];
 
 app.use(cors({
@@ -39,16 +47,13 @@ app.use(cors({
 
 app.use(express.json());
 
-// ✅ Ensure uploads directory exists
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Serve static files from uploads directory
 app.use('/uploads', express.static(uploadDir));
 
-// ✅ Attach Vision client to request object for analysis routes
 app.use('/api/analysis', (req, res, next) => {
   req.visionClient = client;
   next();
@@ -56,12 +61,10 @@ app.use('/api/analysis', (req, res, next) => {
 
 app.use('/api/bmi', bmiRoutes);
 
-// Health check
 app.get('/', (req, res) => {
   res.send('✅ NutriScan API is running...');
 });
 
-// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
